@@ -1,58 +1,437 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel ToDo API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+REST API for user authentication and personal ToDo management, built with Laravel and JWT authentication. This project is structured with DTOs, Services, Repositories, and Form Requests to keep controllers thin and business logic testable.
 
-## About Laravel
+## Tech stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3
+- Laravel 13
+- JWT authentication (tymon/jwt-auth)
+- MySQL (default) and SQLite (testing)
+- Vite + Tailwind CSS (frontend tooling; API focused)
+- PHPUnit
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## System requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.3+
+- Composer 2+
+- Node.js 18+ and npm
+- MySQL 8+ (or compatible) for local development
 
-## Learning Laravel
+## Installation and setup
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+1) Clone the repository
+2) Install dependencies
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+npm install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+3) Create environment file and app key
 
-## Contributing
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+4) Configure environment (see next section)
+5) Run migrations
 
-## Code of Conduct
+```bash
+php artisan migrate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+6) Start the app
 
-## Security Vulnerabilities
+```bash
+php artisan serve
+npm run dev
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Optional: run the bundled setup script
 
-## License
+```bash
+composer run setup
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Environment configuration
+
+Update these values in .env for local development:
+
+```dotenv
+APP_NAME=Laravel
+APP_ENV=local
+APP_KEY=base64:...
+APP_DEBUG=true
+APP_URL=http://localhost
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=todo_challenge
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+### JWT configuration
+
+This project uses tymon/jwt-auth. Ensure a JWT secret is present in .env:
+
+```bash
+php artisan jwt:secret
+```
+
+If config/jwt.php is missing in your local copy, publish it:
+
+```bash
+php artisan vendor:publish --provider="Tymon\\JWTAuth\\Providers\\LaravelServiceProvider"
+```
+
+## Database setup and migrations
+
+Create the database and run migrations:
+
+```bash
+php artisan migrate
+```
+
+### Testing database
+
+Tests run with SQLite in memory (see phpunit.xml). No extra setup is required.
+
+```bash
+php artisan test
+```
+
+## Running the project locally
+
+- API server: `php artisan serve`
+- Frontend tooling: `npm run dev`
+
+The API base URL defaults to:
+
+```
+http://localhost/api
+```
+
+## Architecture and conventions
+
+- Controllers delegate logic to Services and DTOs.
+- Repositories isolate Eloquent queries from business logic.
+- Form Requests handle validation and per-resource authorization.
+- Resources format API responses consistently.
+- Ownership checks are enforced in Form Requests using the authenticated JWT user.
+
+## Authentication flow
+
+1) Register a user
+2) Verify email with a 6-digit code
+3) Log in to receive a JWT
+4) Use the JWT in the Authorization header for all protected endpoints
+
+Authorization header format:
+
+```
+Authorization: Bearer <token>
+```
+
+## API documentation
+
+All endpoints are prefixed with `/api`.
+
+### Auth
+
+#### POST /api/auth/register
+
+Registers a new user (unverified).
+
+Request body:
+
+```json
+{
+	"name": "Jane Doe",
+	"email": "jane@example.com",
+	"password": "password123",
+	"password_confirmation": "password123"
+}
+```
+
+Response 201:
+
+```json
+{
+	"success": true,
+	"message": "Registration successful. Please check your email for the verification code.",
+	"data": {
+		"user": {
+			"id": 1,
+			"email": "jane@example.com",
+			"status": "Unverified"
+		}
+	}
+}
+```
+
+Validation errors: 422 with field errors.
+
+#### POST /api/auth/verify-email
+
+Verifies a user by a 6-digit code.
+
+Request body:
+
+```json
+{
+	"code": "123456"
+}
+```
+
+Response 200:
+
+```json
+{
+	"success": true,
+	"message": "Email verified successfully. You can now log in.",
+	"data": null
+}
+```
+
+Invalid or expired code: 422.
+
+#### POST /api/auth/login
+
+Logs in a verified user and returns a JWT.
+
+Request body:
+
+```json
+{
+	"email": "jane@example.com",
+	"password": "password123"
+}
+```
+
+Response 200:
+
+```json
+{
+	"success": true,
+	"message": "Login successful.",
+	"data": {
+		"token": "<jwt>",
+		"token_type": "bearer",
+		"expires_in": 3600
+	}
+}
+```
+
+Invalid credentials or unverified user: 401.
+
+#### POST /api/auth/logout
+
+Requires authentication. Invalidates the current token.
+
+Response 200:
+
+```json
+{
+	"success": true,
+	"message": "Successfully logged out.",
+	"data": null
+}
+```
+
+Missing or invalid token: 401.
+
+### ToDos (all require authentication)
+
+#### GET /api/todos
+
+Lists the authenticated user's todos with pagination.
+
+Query params:
+
+- `search` (optional): filter by title
+- `per_page` (optional): items per page (max 10)
+- `page` (optional): page number
+
+Response 200:
+
+```json
+{
+	"success": true,
+	"message": "ToDos retrieved successfully.",
+	"data": {
+		"data": [
+			{
+				"id": 1,
+				"title": "Buy milk",
+				"description": "Remember to buy milk",
+				"status": { "value": "pending", "label": "Pending" },
+				"created_at": "2026-05-01T10:00:00Z",
+				"updated_at": "2026-05-01T10:00:00Z"
+			}
+		],
+		"links": {
+			"first": "http://localhost/api/todos?page=1",
+			"last": "http://localhost/api/todos?page=1",
+			"prev": null,
+			"next": null
+		},
+		"meta": {
+			"current_page": 1,
+			"from": 1,
+			"last_page": 1,
+			"path": "http://localhost/api/todos",
+			"per_page": 10,
+			"to": 1,
+			"total": 1
+		}
+	}
+}
+```
+
+Validation errors: 422 (for example `per_page` over 10).
+
+#### POST /api/todos
+
+Creates a new todo for the authenticated user.
+
+Request body:
+
+```json
+{
+	"title": "Write tests",
+	"description": "Cover all endpoints",
+	"status": "pending"
+}
+```
+
+Response 201:
+
+```json
+{
+	"success": true,
+	"message": "ToDo created successfully.",
+	"data": {
+		"todo": {
+			"id": 1,
+			"title": "Write tests",
+			"description": "Cover all endpoints",
+			"status": { "value": "pending", "label": "Pending" },
+			"created_at": "2026-05-01T10:00:00Z",
+			"updated_at": "2026-05-01T10:00:00Z"
+		}
+	}
+}
+```
+
+Validation errors: 422.
+
+#### GET /api/todos/{todo}
+
+Returns a single todo. Only the owner can access it.
+
+Response 200:
+
+```json
+{
+	"success": true,
+	"message": "ToDo retrieved successfully.",
+	"data": {
+		"todo": {
+			"id": 1,
+			"title": "Buy milk",
+			"description": "Remember to buy milk",
+			"status": { "value": "pending", "label": "Pending" },
+			"created_at": "2026-05-01T10:00:00Z",
+			"updated_at": "2026-05-01T10:00:00Z"
+		}
+	}
+}
+```
+
+Not found: 404. Not owner: 403.
+
+#### PUT /api/todos/{todo}
+
+Updates a todo. Only the owner can update it.
+
+Request body:
+
+```json
+{
+	"title": "Updated title",
+	"description": "Updated description",
+	"status": "in_progress"
+}
+```
+
+Response 200:
+
+```json
+{
+	"success": true,
+	"message": "ToDo updated successfully.",
+	"data": {
+		"todo": {
+			"id": 1,
+			"title": "Updated title",
+			"description": "Updated description",
+			"status": { "value": "in_progress", "label": "In Progress" },
+			"created_at": "2026-05-01T10:00:00Z",
+			"updated_at": "2026-05-01T10:30:00Z"
+		}
+	}
+}
+```
+
+Validation errors: 422. Not owner: 403.
+
+#### DELETE /api/todos/{todo}
+
+Deletes a todo. Only the owner can delete it.
+
+Response 200:
+
+```json
+{
+	"success": true,
+	"message": "ToDo deleted successfully.",
+	"data": null
+}
+```
+
+Not found: 404. Not owner: 403.
+
+### Task status values
+
+- `pending`
+- `in_progress`
+- `completed`
+
+## Common error responses
+
+JWT middleware returns 401 for missing or invalid tokens:
+
+```json
+{
+	"status": "error",
+	"message": "Token not provided.",
+	"data": []
+}
+```
+
+## Usage guidelines
+
+- Always send the JWT for protected endpoints.
+- The API is stateless; do not rely on sessions.
+- Each todo is scoped to the authenticated user.
+- Use pagination query params to control list size.
+
+## Testing
+
+```bash
+php artisan test
+```
