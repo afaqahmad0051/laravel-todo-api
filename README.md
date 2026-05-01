@@ -72,7 +72,20 @@ DB_PORT=3306
 DB_DATABASE=todo_challenge
 DB_USERNAME=root
 DB_PASSWORD=
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=your_smtp_username
+MAIL_PASSWORD=your_smtp_password
+MAIL_FROM_ADDRESS="no-reply@example.com"
+MAIL_FROM_NAME="Laravel ToDo API"
+MAIL_SCHEME=tls
 ```
+
+### Email credentials
+
+This project sends a verification code during registration. Configure your SMTP provider using the mail settings above (for example Mailtrap, SendGrid, SES, or a local SMTP server). In development, you can use a sandbox provider and keep `MAIL_MAILER=log` if you want to log emails instead of sending them.
 
 ### JWT configuration
 
