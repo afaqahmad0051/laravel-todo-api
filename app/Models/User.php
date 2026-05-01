@@ -10,6 +10,7 @@ use Database\Factories\UserFactory;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -50,6 +51,14 @@ class User extends Authenticatable implements JWTSubject
         return $this->verification_code === $code
             && $this->verification_code_expires_at !== null
             && $this->verification_code_expires_at->isFuture();
+    }
+
+    /**
+     * @return HasMany<Todo, $this>
+     */
+    public function todos(): HasMany
+    {
+        return $this->hasMany(Todo::class);
     }
 
     public function getJWTIdentifier(): mixed
